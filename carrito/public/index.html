@@ -287,7 +287,7 @@
 const SUPABASE_URL = 'https://twfpcczenmpxrxtvrgqj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3ZnBjY3plbm1weHJ4dHZyZ3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3OTczODMsImV4cCI6MjA5MDM3MzM4M30.WQnULJCMRo6PEjX9dSDd8yEz2Qzs5ijl-k956nlBdPw';
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { detectSessionInUrl: true, persistSession: true } });
 let currentUser = null;
 let currentItems = [];
 let stores = [];
@@ -296,7 +296,8 @@ let stores = [];
 sb.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user ?? null;
   if (currentUser) {
-    document.getElementById('loginWrap').style.display = 'none';
+    if (window.location.hash) history.replaceState(null, "", window.location.pathname);
+    document.getElementById("loginWrap").style.display = "none";
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('userEmail').textContent = currentUser.email;
     init();
