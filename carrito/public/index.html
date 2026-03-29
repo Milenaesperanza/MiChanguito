@@ -394,7 +394,7 @@ async function loadStores() {
 function renderStoreSelect(targetId='storeSelect') {
   const sel = document.getElementById(targetId);
   const cur = sel.value;
-  sel.innerHTML = '<option value="">Seleccionar comercio...</option>';
+  sel.innerHTML = '<option value="">Seleccionar supermercado...</option>';
   [...stores].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
     const o = document.createElement('option');
     o.value = s.name;
@@ -677,7 +677,7 @@ async function editTicket(id) {
 
   // Rellenar store select
   const sel = document.getElementById('editStoreSelect');
-  sel.innerHTML = '<option value="">Seleccionar comercio...</option>';
+  sel.innerHTML = '<option value="">Seleccionar supermercado/comercio...</option>';
   stores.forEach(s => {
     const o = document.createElement('option');
     o.value = s.name; o.textContent = s.name;
