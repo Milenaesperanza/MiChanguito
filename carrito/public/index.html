@@ -282,11 +282,50 @@
 <script>
 
 function normalizarTexto(texto) {
-  // Si viene todo en mayúsculas, convertir a formato Titulo
-  if (texto === texto.toUpperCase()) {
-    return texto.toLowerCase().replace(/(?:^|\s)\S/g, l => l.toUpperCase());
+  let cantidad = '';
+  let limpio = texto;
+  let precioUnitario = null;
+
+  // Detectar formato "2X1700.00" o "3.00 x 2800.00" — cantidad x precio unitario
+  const multMatch = texto.match(/^(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/);
+  if (multMatch) {
+    precioUnitario = parseFloat(multMatch[2].replace(',', '.'));
+    limpio = texto.slice(multMatch[0].length).trim();
   }
-  return texto;
+
+  // Extraer cantidad si hay * o # (formato chino: TREGAR LECHE DES*1LT)
+  const starMatch = limpio.match(/[*#](.+)$/);
+  if (starMatch) {
+    const raw = starMatch[1].trim();
+    const soloUnidad = raw.match(/^(lt|ltr|kg|gr|g|ml|cc|un)$/i);
+    if (soloUnidad) {
+      cantidad = '1' + soloUnidad[1].toLowerCase();
+    } else {
+      cantidad = raw.replace(',', '.').toLowerCase()
+        .replace(/\s+/g, '')
+        .replace('ltr', 'lt');
+    }
+    limpio = limpio.slice(0, limpio.search(/[*#]/)).trim();
+  }
+
+  // Ignorar códigos entre paréntesis tipo (21) = IVA
+  limpio = limpio.replace(/\(\d+(?:\.\d+)?\)/g, '').trim();
+
+  // Detectar cantidad al final del nombre sin asterisco (ej: "ARIEL 800 ML")
+  if (!cantidad) {
+    const cantFinal = limpio.match(/(\d+(?:[.,]\d+)?)\s*(ml|lt|ltr|kg|gr|g|cc|un)\.?$/i);
+    if (cantFinal) {
+      cantidad = cantFinal[1].replace(',','.') + cantFinal[2].toLowerCase().replace('ltr','lt');
+      limpio = limpio.slice(0, limpio.lastIndexOf(cantFinal[0])).trim();
+    }
+  }
+
+  // Convertir todo mayúsculas a formato Titulo
+  if (limpio === limpio.toUpperCase()) {
+    limpio = limpio.toLowerCase().replace(/(?:^|\s)\S/g, l => l.toUpperCase());
+  }
+
+  return { texto: limpio, cantidad, precioUnitario };
 }
 
 function parsearProducto(texto) {
@@ -510,9 +549,11 @@ document.getElementById('fileInput').addEventListener('change', async function()
     const result = await invokeEdgeFunction('scan-ticket', { imageBase64: base64, mimeType: file.type || 'image/jpeg' });
     if (result.error) throw new Error(result.error);
     currentItems = (result.lineItems || []).map(item => {
-      const nombre = normalizarTexto(item.name || '');
-      const { tipo, marca, cantidad } = parsearProducto(nombre);
-      return { ...item, name: nombre, tipo, marca, cantidad };
+      const { texto: nombre, cantidad: cantidadOcr, precioUnitario } = normalizarTexto(item.name || '');
+      const { tipo, marca, cantidad: cantidadParser } = parsearProducto(nombre);
+      const cantidad = cantidadOcr || cantidadParser;
+      const price = precioUnitario ?? (parseFloat(item.price) || 0);
+      return { ...item, name: nombre, tipo, marca, cantidad, price };
     });
     if (result.storeName) {
       const sel = document.getElementById('storeSelect');
@@ -600,7 +641,8 @@ function removeItem(i) { currentItems.splice(i,1); renderItems(); }
 function autoNormalizar(input) {
   const val = input.value;
   if (val === val.toUpperCase() && val.length > 3) {
-    input.value = val.toLowerCase().replace(/(?:^|\s)\S/g, l => l.toUpperCase());
+    const { texto } = normalizarTexto(val);
+    input.value = texto;
   }
 }
 
