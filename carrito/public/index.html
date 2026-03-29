@@ -175,8 +175,8 @@
           <div class="scan-text" id="scanStatus">Analizando ticket...</div>
         </div>
         <span class="upload-icon" id="uploadIcon">📄</span>
-        <div class="upload-text" id="uploadText">Tocá para fotografiar o subir</div>
-        <div class="upload-sub" id="uploadSub">JPG o PNG — el ticket se transcribe automáticamente</div>
+        <div class="upload-text" id="uploadText">Fotografiá el ticket hasta donde dice TOTAL</div>
+        <div class="upload-sub" id="uploadSub">Incluí solo hasta la línea TOTAL, no más</div>
       </div>
       <input type="file" id="fileInput" accept="image/*" capture="environment">
       <select class="field" id="storeSelect"><option value="">Seleccionar comercio...</option></select>
@@ -560,15 +560,20 @@ document.getElementById('fileInput').addEventListener('change', async function()
       const match = Array.from(sel.options).find(o => o.value.toLowerCase().includes(result.storeName.toLowerCase()));
       if (match) sel.value = match.value;
     }
+    console.log('receiptDate raw:', result.receiptDate);
     if (result.receiptDate) {
-      const parts = result.receiptDate.split('-');
+      // Tabscanner puede devolver fecha como "YYYY-MM-DD" o "DD/MM/YYYY" o "YYYY-MM-DD HH:MM:SS"
+      let dateStr = result.receiptDate.split(' ')[0]; // sacar hora si viene
+      let parts = dateStr.includes('-') ? dateStr.split('-') : dateStr.split('/');
       if (parts.length === 3) {
+        // Detectar si viene DD/MM/YYYY o YYYY-MM-DD
+        const isYMD = parts[0].length === 4;
         const yy = document.getElementById('dateYear');
         const mm = document.getElementById('dateMonth');
         const dd = document.getElementById('dateDay');
-        if (yy) yy.value = parts[0];
-        if (mm) mm.value = parts[1];
-        if (dd) dd.value = parts[2];
+        if (yy) yy.value = isYMD ? parts[0] : parts[2];
+        if (mm) mm.value = isYMD ? parts[1] : parts[1];
+        if (dd) dd.value = isYMD ? parts[2] : parts[0];
       }
     }
     document.getElementById('uploadIcon').textContent = '✅';
@@ -579,8 +584,8 @@ document.getElementById('fileInput').addEventListener('change', async function()
     el.textContent = 'Error: ' + (err.message || 'No se pudo leer el ticket.');
     el.classList.add('show');
     document.getElementById('uploadIcon').textContent = '📄';
-    document.getElementById('uploadText').textContent = 'Tocá para fotografiar o subir';
-    document.getElementById('uploadSub').textContent = 'JPG o PNG — el ticket se transcribe automáticamente';
+    document.getElementById('uploadText').textContent = 'Fotografiá el ticket hasta donde dice TOTAL';
+    document.getElementById('uploadSub').textContent = 'Incluí solo hasta la línea TOTAL, no más';
   } finally {
     document.getElementById('scanOverlay').classList.remove('show');
     ['uploadIcon','uploadText','uploadSub'].forEach(id => document.getElementById(id).style.opacity = '1');
@@ -620,16 +625,19 @@ function renderItems() {
           onfocus="this.scrollIntoView({behavior:'smooth',block:'center'})"
           onchange="currentItems[${i}].marca=this.value" style="font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white)">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 32px;gap:6px;align-items:center">
-        <input class="item-name-input" value="${escHtml(item.cantidad||'')}" placeholder="Cantidad (1lt, 500gr...)"
+      <div style="display:grid;grid-template-columns:1fr 60px 80px 32px;gap:6px;align-items:center">
+        <input class="item-name-input" value="${escHtml(item.cantidad||'')}" placeholder="Cant. (1lt...)"
           onfocus="this.scrollIntoView({behavior:'smooth',block:'center'})"
           onchange="currentItems[${i}].cantidad=this.value;renderItems()" style="font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white)">
+        <input class="item-name-input" value="${item.unidades||1}" placeholder="Unid."
+          onfocus="this.scrollIntoView({behavior:'smooth',block:'center'})"
+          onchange="currentItems[${i}].unidades=parseInt(this.value)||1;renderItems()" style="font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white);text-align:center" title="Unidades compradas">
         <input class="item-price-input" value="$${item.price||0}"
           onfocus="this.scrollIntoView({behavior:'smooth',block:'center'})"
           onchange="currentItems[${i}].price=parseFloat(this.value.replace(/[^0-9.]/g,''))||0;calcTotal()" style="font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white);text-align:right">
         <button class="del-btn" onclick="removeItem(${i})">✕</button>
       </div>
-      ${ppu ? `<div style="font-size:10px;color:var(--faint);margin-top:3px;text-align:right">$${ppu.valor} ${ppu.label}</div>` : ''}
+      ${ppu ? `<div style="font-size:10px;color:var(--faint);margin-top:3px;text-align:right">$${Math.round(ppu.valor / (item.unidades||1))} ${ppu.label} · ${item.unidades||1} unid.</div>` : ''}
     </div>`;
   }).join('');
   document.getElementById('totalRow').style.display = 'flex';
@@ -667,7 +675,14 @@ function calcTotal() {
 async function saveTicket() {
   const store = document.getElementById('storeSelect').value;
   const date = getSelectedDate();
-  if (!store || store === '__new__') { toast('Seleccioná un comercio'); return; }
+  if (!store || store === '__new__' || store === '__del__') {
+    const sel = document.getElementById('storeSelect');
+    sel.style.borderColor = '#C8372D';
+    sel.style.borderWidth = '2px';
+    setTimeout(() => { sel.style.borderColor = ''; sel.style.borderWidth = ''; }, 2000);
+    toast('⚠️ Seleccioná un comercio antes de guardar');
+    return;
+  }
   if (!currentItems.length) { toast('Agregá al menos un producto'); return; }
   const total = currentItems.reduce((s,i) => s+(parseFloat(i.price)||0), 0);
   const btn = document.getElementById('saveBtn');
@@ -693,8 +708,8 @@ async function saveTicket() {
     renderItems();
     btn.disabled = true;
     document.getElementById('uploadIcon').textContent = '📄';
-    document.getElementById('uploadText').textContent = 'Tocá para fotografiar o subir';
-    document.getElementById('uploadSub').textContent = 'JPG o PNG — el ticket se transcribe automáticamente';
+    document.getElementById('uploadText').textContent = 'Fotografiá el ticket hasta donde dice TOTAL';
+    document.getElementById('uploadSub').textContent = 'Incluí solo hasta la línea TOTAL, no más';
     document.getElementById('storeSelect').value = '';
     initDateSelects();
   } catch(err) {
