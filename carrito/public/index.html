@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>TuChangüito</title>
+<title>TuChangÜito</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -141,14 +141,14 @@
 <!-- PANTALLA DE NOMBRE -->
 <div id="loginWrap" class="login-wrap">
   <div class="login-box">
-    <div class="login-logo">TuChang<span>ü</span>ito</div>
+    <div class="login-logo">TuChang<span>Ü</span>ito</div>
     <div class="login-sub">Bienvenid@ — Registrate sólo con tu nombre</div>
     <label class="login-label">Soy</label>
     <input class="login-input" type="text" id="loginName" placeholder="Fulano, Sultano, Mengano..." autocomplete="name" autocapitalize="words">
     <div class="login-disc">Recordalo para acceder a tu historial de compras Ü</div>
     <button class="login-btn" onclick="entrar()">Entrar</button>
     <div style="margin-top:20px;text-align:center;font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:.03em">
-      2026 · TuChangüito v0.1 · otro MVP de <a href="https://www.instagram.com/srtamilu" target="_blank" style="color:rgba(255,255,255,0.8);font-weight:700;text-decoration:none">SrtaMilu</a>
+      2026 · TuChangÜito v0.1 · otro MVP de <a href="https://www.instagram.com/srtamilu" target="_blank" style="color:rgba(255,255,255,0.8);font-weight:700;text-decoration:none">SrtaMilu</a>
     </div>
   </div>
 </div>
@@ -157,7 +157,7 @@
 <div id="appWrap" style="display:none">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">TuChang<span>ü</span>ito</div>
+      <div class="logo">TuChang<span>Ü</span>ito</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="user-badge" id="userBadge"></span>
         <button style="font-size:11px;color:var(--faint);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="salir()">Salir</button>
@@ -383,8 +383,12 @@ const DEFAULT_STORES = ['Carrefour','Changomas','Coto','Dia','Disco','El Chino d
 
 async function loadStores() {
   try {
-    const data = await sbFetch('/rest/v1/stores?select=id,name&order=name');
-    stores = data.map(s => ({...s, isDefault: DEFAULT_STORES.includes(s.name)}));
+    const defaults = await sbFetch('/rest/v1/stores?select=id,name,is_default,user_name&is_default=eq.true&order=name');
+    const mios = await sbFetch(`/rest/v1/stores?select=id,name,is_default,user_name&is_default=eq.false&user_name=eq.${encodeURIComponent(currentUser)}&order=name`);
+    stores = [
+      ...defaults.map(s => ({...s, isDefault: true})),
+      ...mios.map(s => ({...s, isDefault: false}))
+    ];
   } catch {
     stores = ['Carrefour','Changomas','Coto','Dia','Disco','El Chino del Barrio','Jumbo','Vea'].map(n => ({id:n,name:n,isDefault:true}));
   }
@@ -460,7 +464,7 @@ function showStoreManager() {
 
 async function addStore(name) {
   try {
-    await sbFetch('/rest/v1/stores', { method: 'POST', body: JSON.stringify({ name }) });
+    await sbFetch('/rest/v1/stores', { method: 'POST', body: JSON.stringify({ name, user_name: currentUser, is_default: false }) });
     await loadStores();
   } catch {
     stores.push({ id: name, name, isDefault: false });
