@@ -394,6 +394,15 @@ function mostrarApp() {
 function salir() {
   localStorage.removeItem('mc_user');
   currentUser = '';
+  currentItems = [];
+  stores = [];
+  renderItems();
+  document.getElementById('storeSelect').innerHTML = '<option value="">Seleccionar comercio...</option>';
+  document.getElementById('uploadIcon').textContent = '📄';
+  document.getElementById('uploadText').textContent = 'Fotografiá el ticket hasta donde dice TOTAL';
+  document.getElementById('uploadSub').textContent = 'Incluí solo hasta la línea TOTAL, no más';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('scanError').classList.remove('show');
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('appWrap').style.display = 'none';
   document.getElementById('loginName').value = '';
@@ -560,21 +569,24 @@ document.getElementById('fileInput').addEventListener('change', async function()
       const match = Array.from(sel.options).find(o => o.value.toLowerCase().includes(result.storeName.toLowerCase()));
       if (match) sel.value = match.value;
     }
-    console.log('receiptDate raw:', result.receiptDate);
     if (result.receiptDate) {
-      // Tabscanner puede devolver fecha como "YYYY-MM-DD" o "DD/MM/YYYY" o "YYYY-MM-DD HH:MM:SS"
-      let dateStr = result.receiptDate.split(' ')[0]; // sacar hora si viene
-      let parts = dateStr.includes('-') ? dateStr.split('-') : dateStr.split('/');
-      if (parts.length === 3) {
-        // Detectar si viene DD/MM/YYYY o YYYY-MM-DD
-        const isYMD = parts[0].length === 4;
-        const yy = document.getElementById('dateYear');
-        const mm = document.getElementById('dateMonth');
-        const dd = document.getElementById('dateDay');
-        if (yy) yy.value = isYMD ? parts[0] : parts[2];
-        if (mm) mm.value = isYMD ? parts[1] : parts[1];
-        if (dd) dd.value = isYMD ? parts[2] : parts[0];
-      }
+      try {
+        let dateStr = result.receiptDate.split(' ')[0];
+        // Separar por / o -
+        const parts = dateStr.split(/[-\/]/);
+        if (parts.length === 3) {
+          const isYMD = parts[0].length === 4;
+          let y = isYMD ? parts[0] : (parts[2].length === 2 ? '20' + parts[2] : parts[2]);
+          let m = parts[1];
+          let d = isYMD ? parts[2] : parts[0];
+          const yy = document.getElementById('dateYear');
+          const mm = document.getElementById('dateMonth');
+          const dd = document.getElementById('dateDay');
+          if (yy) yy.value = y;
+          if (mm) mm.value = m.padStart(2,'0');
+          if (dd) dd.value = d.padStart(2,'0');
+        }
+      } catch(e) { console.log('fecha no parseada:', e); }
     }
     document.getElementById('uploadIcon').textContent = '✅';
     document.getElementById('uploadText').textContent = 'Ticket procesado';
