@@ -519,7 +519,17 @@ document.getElementById('fileInput').addEventListener('change', async function()
       const match = Array.from(sel.options).find(o => o.value.toLowerCase().includes(result.storeName.toLowerCase()));
       if (match) sel.value = match.value;
     }
-    if (result.receiptDate) document.getElementById('dateField').value = result.receiptDate;
+    if (result.receiptDate) {
+      const parts = result.receiptDate.split('-');
+      if (parts.length === 3) {
+        const yy = document.getElementById('dateYear');
+        const mm = document.getElementById('dateMonth');
+        const dd = document.getElementById('dateDay');
+        if (yy) yy.value = parts[0];
+        if (mm) mm.value = parts[1];
+        if (dd) dd.value = parts[2];
+      }
+    }
     document.getElementById('uploadIcon').textContent = '✅';
     document.getElementById('uploadText').textContent = 'Ticket procesado';
     document.getElementById('uploadSub').textContent = 'Revisá y editá antes de guardar';
