@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mi Changuito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage:       #3B6D11;
+    --sage-l:     #EAF3DE;
+    --sage-m:     #639922;
+    --amber:      #BA7517;
+    --amber-l:    #FAEEDA;
+    --coral:      #D85A30;
+    --coral-l:    #FAECE7;
+    --ink:        #1a1a18;
+    --muted:      #6b6b66;
+    --faint:      #9e9e98;
+    --border:     #e2e0d8;
+    --surface:    #f7f6f2;
+    --white:      #ffffff;
+    --radius:     12px;
+    --radius-sm:  8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-inner { max-width: 480px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--sage); }
+  .logo span { font-style: italic; }
+  .header-sub { font-size: 11px; color: var(--faint); margin-top: 2px; letter-spacing: .03em; }
+
+  /* ── Nav ── */
+  .nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 10;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 10px 4px 12px;
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--faint);
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border-top: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+    letter-spacing: .02em;
+  }
+  .nav-btn.active { color: var(--sage); border-top-color: var(--sage); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  /* ── Screens ── */
+  .screen { display: none; max-width: 480px; margin: 0 auto; padding: 20px 16px; }
+  .screen.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .card-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    color: var(--faint);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .upload-zone:hover { border-color: var(--sage-m); background: var(--sage-l); }
+  .upload-zone:hover .upload-icon { transform: scale(1.1); }
+  .upload-icon { font-size: 36px; display: block; margin-bottom: 10px; transition: transform .2s; }
+  .upload-text { font-size: 15px; color: var(--muted); }
+  .upload-sub { font-size: 12px; color: var(--faint); margin-top: 5px; }
+  #fileInput { display: none; }
+
+  /* ── Scanning overlay ── */
+  .scan-overlay {
+    display: none;
+    position: absolute; inset: 0;
+    background: rgba(234,243,222,.9);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .scan-overlay.show { display: flex; }
+  .scan-dots { display: flex; gap: 7px; }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--sage);
+    animation: pulse .9s ease-in-out infinite alternate;
+  }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse { from { opacity: .25; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+  .scan-text { font-size: 13px; color: var(--sage); font-weight: 500; }
+
+  /* ── Form fields ── */
+  .field {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--white);
+    color: var(--ink);
+    margin-bottom: 10px;
+    transition: border-color .15s;
+  }
+  .field:focus { outline: none; border-color: var(--sage-m); }
+  .field:last-child { margin-bottom: 0; }
+
+  /* ── Ticket items ── */
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 32px;
+    gap: 8px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--surface);
+    animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .item-row:last-of-type { border-bottom: none; }
+  .item-name-input, .item-price-input {
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    width: 100%;
+    padding: 3px 6px;
+    border-radius: 6px;
+    transition: background .15s;
+  }
+  .item-name-input:focus, .item-price-input:focus {
+    outline: none;
+    background: var(--surface);
+  }
+  .item-price-input { text-align: right; font-weight: 500; }
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--faint);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: color .15s, background .15s;
+  }
+  .del-btn:hover { color: var(--coral); background: var(--coral-l); }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 14px;
+    margin-top: 6px;
+    border-top: 1.5px solid var(--border);
+  }
+  .total-label { font-size: 14px; font-weight: 500; }
+  .total-amount { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--sage); }
+
+  .add-row { display: flex; gap: 8px; margin-top: 12px; }
+  .add-row .field { margin-bottom: 0; }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--sage);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+    letter-spacing: .01em;
+  }
+  .btn-primary:hover { opacity: .88; }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  .btn-sm {
+    padding: 8px 14px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .btn-sm:hover { background: var(--surface); }
+
+  /* ── Metrics ── */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .metric {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--faint); margin-bottom: 4px; }
+  .metric-value { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); }
+  .metric-value.green { color: var(--sage); }
+
+  /* ── History ── */
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--surface);
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .history-item:hover { opacity: .7; }
+  .history-item:last-child { border-bottom: none; }
+  .h-store { font-size: 14px; font-weight: 500; }
+  .h-meta { font-size: 12px; color: var(--faint); margin-top: 2px; }
+  .h-amount { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); }
+
+  /* ── Compare ── */
+  .tab-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 7px 16px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all .15s;
+  }
+  .tab.active { background: var(--sage); color: #fff; border-color: var(--sage); }
+
+  .bar-wrap { margin-bottom: 16px; }
+  .bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .bar-store { font-size: 14px; font-weight: 500; }
+  .bar-amount { font-size: 13px; color: var(--muted); }
+  .bar-track { height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--sage); transition: width .5s ease; }
+  .bar-fill.high { background: var(--coral); }
+  .bar-meta { font-size: 11px; color: var(--faint); margin-top: 3px; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: .02em;
+  }
+  .badge-best { background: var(--sage-l); color: var(--sage); }
+  .badge-worst { background: var(--coral-l); color: var(--coral); }
+  .badge-mid { background: var(--amber-l); color: var(--amber); }
+
+  /* ── Product compare rows ── */
+  .prod-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--surface);
+  }
+  .prod-row:last-child { border-bottom: none; }
+  .prod-store { font-size: 13px; color: var(--muted); }
+  .prod-price { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .prod-price.best { color: var(--sage); }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--faint);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 99px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all .25s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Error ── */
+  .error-banner {
+    background: var(--coral-l);
+    color: var(--coral);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .error-banner.show { display: block; }
+
+  /* ── Config screen ── */
+  .config-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .config-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .config-hint { font-size: 11px; color: var(--faint); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <div class="logo">Mi <span>Changuito</span></div>
+      <div class="header-sub">control de gastos compartido</div>
+    </div>
+    <div style="font-size:24px">🛒</div>
+  </div>
+</div>
+
+<div id="screen-scan" class="screen active">
+  <div class="error-banner" id="scanError"></div>
+
+  <div class="card">
+    <div class="card-label">Foto del ticket</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="scan-overlay" id="scanOverlay">
+        <div class="scan-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="scan-text" id="scanStatus">Analizando ticket...</div>
+      </div>
+      <span class="upload-icon" id="uploadIcon">📄</span>
+      <div class="upload-text" id="uploadText">Tocá para fotografiar o subir</div>
+      <div class="upload-sub" id="uploadSub">JPG o PNG — el ticket se transcribe automáticamente</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+
+    <select class="field" id="storeSelect">
+      <option value="">Seleccionar comercio...</option>
+    </select>
+    <input type="date" class="field" id="dateField">
+  </div>
+
+  <div class="card" id="itemsCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-label" style="margin-bottom:0">Productos</div>
+      <span id="itemCount" style="font-size:12px;color:var(--faint)">0 items</span>
+    </div>
+
+    <div id="itemsList"><div class="empty">La transcripción aparecerá aquí.<br>También podés cargar manualmente.</div></div>
+
+    <div class="add-row">
+      <input class="field" type="text" id="newName" placeholder="Producto..." style="flex:1;margin-bottom:0">
+      <input class="field" type="number" id="newPrice" placeholder="$" style="width:80px;flex:none;margin-bottom:0">
+      <button class="btn-sm" onclick="addItem()">+ Agregar</button>
+    </div>
+
+    <div class="total-row" id="totalRow" style="display:none">
+      <span class="total-label">Total</span>
+      <span class="total-amount" id="totalDisplay">$0</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="saveBtn" onclick="saveTicket()" disabled>Guardar compra</button>
+</div>
+
+<div id="screen-history" class="screen">
+  <div class="metric-grid">
+    <div class="metric"><div class="metric-label">Gasto este mes</div><div class="metric-value green" id="monthTotal">$0</div></div>
+    <div class="metric"><div class="metric-label">Tickets guardados</div><div class="metric-value" id="ticketCount">0</div></div>
+  </div>
+  <div class="card">
+    <div class="card-label">Compras recientes</div>
+    <div id="historyList"><div class="empty">Aún no hay compras guardadas.</div></div>
+  </div>
+</div>
+
+<div id="screen-compare" class="screen">
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('stores',this)">Por comercio</button>
+    <button class="tab" onclick="switchTab('product',this)">Por producto</button>
+  </div>
+
+  <div id="tab-stores">
+    <div class="card">
+      <div class="card-label">Gasto por comercio</div>
+      <div id="storeChart"><div class="empty">Guardá compras de distintos comercios para comparar.</div></div>
+    </div>
+  </div>
+
+  <div id="tab-product" style="display:none">
+    <div class="card">
+      <div class="card-label">Buscar producto</div>
+      <input class="field" type="text" id="productSearch" placeholder="Ej: leche, aceite, fideos..." oninput="searchProduct()" style="margin-bottom:0">
+    </div>
+    <div class="card" id="productResult" style="display:none">
+      <div id="productResultInner"></div>
+    </div>
+  </div>
+</div>
+
+<div id="screen-config" class="screen">
+  <div class="card">
+    <div class="card-label">Conexión a Supabase</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      Pegá tus claves de Supabase (son públicas por diseño — la clave privada de Tabscanner vive solo en el servidor).
+    </p>
+    <div class="config-row">
+      <div class="config-label">Supabase URL</div>
+      <input class="field" type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" style="margin-bottom:0">
+      <div class="config-hint">Supabase → Settings → API → Project URL</div>
+    </div>
+    <div class="config-row">
+      <div class="config-label">Supabase Anon Key</div>
+      <input class="field" type="text" id="cfgKey" placeholder="eyJhbGci..." style="margin-bottom:0">
+      <div class="config-hint">Supabase → Settings → API → anon public</div>
+    </div>
+    <button class="btn-primary" onclick="saveConfig()">Guardar y conectar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Estado de conexión</div>
+    <div id="connStatus" style="font-size:13px;color:var(--faint)">Sin configurar</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Guía rápida de setup</div>
+    <ol style="font-size:13px;color:var(--muted);line-height:2;padding-left:18px">
+      <li>Creá cuenta en <strong>supabase.com</strong> (gratis)</li>
+      <li>Ejecutá el archivo <code>schema.sql</code> en SQL Editor</li>
+      <li>Creá cuenta en <strong>tabscanner.com</strong> (gratis, 200/mes)</li>
+      <li>En Supabase → Edge Functions → Secrets:<br>
+          Agregá <code>TABSCANNER_API_KEY</code> con tu clave</li>
+      <li>Deployá la Edge Function <code>scan-ticket</code></li>
+      <li>Pegá URL y Anon Key de Supabase arriba</li>
+      <li>Subí esta app a <strong>netlify.com</strong> (drag & drop)</li>
+    </ol>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showScreen('scan',this)"><span class="nav-icon">📷</span>Nuevo</button>
+  <button class="nav-btn" onclick="showScreen('history',this)"><span class="nav-icon">📋</span>Historial</button>
+  <button class="nav-btn" onclick="showScreen('compare',this)"><span class="nav-icon">📊</span>Comparar</button>
+  <button class="nav-btn" onclick="showScreen('config',this)"><span class="nav-icon">⚙️</span>Config</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Configuración: cargada desde localStorage, nunca hardcodeada ──
+// Las únicas claves visibles son SUPABASE_URL y SUPABASE_ANON_KEY
+// (diseñadas para ser públicas). La clave de Tabscanner vive SOLO en el servidor.
+
+let SUPABASE_URL = localStorage.getItem('sb_url') || '';
+let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
+
+// Precarga campos de config si ya hay valores guardados
+window.addEventListener('DOMContentLoaded', () => {
+  if (SUPABASE_URL) document.getElementById('cfgUrl').value = SUPABASE_URL;
+  if (SUPABASE_KEY) document.getElementById('cfgKey').value = SUPABASE_KEY;
+  document.getElementById('dateField').value = today();
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    updateConnStatus('conectado');
+    loadStores();
+  } else {
+    updateConnStatus('sin configurar');
+    loadDefaultStores();
+  }
+});
+
+function saveConfig() {
+  SUPABASE_URL = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
+  SUPABASE_KEY = document.getElementById('cfgKey').value.trim();
+  if (!SUPABASE_URL || !SUPABASE_KEY) { toast('Completá ambos campos'); return; }
+  localStorage.setItem('sb_url', SUPABASE_URL);
+  localStorage.setItem('sb_key', SUPABASE_KEY);
+  updateConnStatus('conectando...');
+  loadStores().then(() => {
+    updateConnStatus('conectado');
+    toast('Conectado a Supabase ✓');
+  }).catch(() => {
+    updateConnStatus('error de conexión');
+    toast('No se pudo conectar. Revisá las claves.');
+  });
+}
+
+function updateConnStatus(msg) {
+  const el = document.getElementById('connStatus');
+  const colors = { 'conectado': 'var(--sage)', 'error de conexión': 'var(--coral)', 'sin configurar': 'var(--faint)' };
+  el.textContent = msg;
+  el.style.color = colors[msg] || 'var(--muted)';
+}
+
+// ── API helpers ──
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function invokeEdgeFunction(fnName, body) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fnName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ── Comercios ──
+let stores = [];
+
+async function loadStores() {
+  const data = await sbFetch('/rest/v1/stores?select=id,name&order=name');
+  stores = data;
+  renderStoreSelect();
+  return data;
+}
+
+function loadDefaultStores() {
+  stores = ['Coto','Carrefour','Dia','Jumbo','Changomas','La Anonima','Vea'].map(n => ({id: n, name: n}));
+  renderStoreSelect();
+}
+
+function renderStoreSelect() {
+  const sel = document.getElementById('storeSelect');
+  sel.innerHTML = '<option value="">Seleccionar comercio...</option>';
+  stores.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.name; o.textContent = s.name;
+    sel.appendChild(o);
+  });
+  const custom = document.createElement('option');
+  custom.value = '__new__'; custom.textContent = '+ Agregar comercio';
+  sel.appendChild(custom);
+}
+
+document.getElementById('storeSelect').addEventListener('change', function() {
+  if (this.value === '__new__') {
+    const name = prompt('Nombre del comercio:');
+    if (name && name.trim()) {
+      addStore(name.trim());
+    } else {
+      this.value = '';
+    }
+  }
+});
+
+async function addStore(name) {
+  if (SUPABASE_URL) {
+    await sbFetch('/rest/v1/stores', { method: 'POST', body: JSON.stringify({ name }) });
+    await loadStores();
+  } else {
+    stores.push({ id: name, name });
+    renderStoreSelect();
+  }
+  document.getElementById('storeSelect').value = name;
+}
+
+// ── Scan ──
+let currentItems = [];
+
+document.getElementById('fileInput').addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  showScanning(true);
+  showError('');
+
+  try {
+    // Convertir imagen a base64
+    const base64 = await fileToBase64(file);
+    const mimeType = file.type || 'image/jpeg';
+
+    if (!SUPABASE_URL) {
+      // Modo demo sin backend
+      await new Promise(r => setTimeout(r, 2000));
+      currentItems = demoItems();
+      setUploadDone();
+    } else {
+      document.getElementById('scanStatus').textContent = 'Enviando al servidor...';
+      const result = await invokeEdgeFunction('scan-ticket', { imageBase64: base64, mimeType });
+
+      if (result.error) throw new Error(result.error);
+
+      currentItems = result.lineItems || [];
+
+      // Autocompletar comercio y fecha si Tabscanner los detectó
+      if (result.storeName) {
+        const sel = document.getElementById('storeSelect');
+        const match = Array.from(sel.options).find(o => o.value.toLowerCase().includes(result.storeName.toLowerCase()));
+        if (match) sel.value = match.value;
+      }
+      if (result.receiptDate) {
+        document.getElementById('dateField').value = result.receiptDate;
+      }
+      setUploadDone();
+    }
+
+    renderItems();
+    document.getElementById('saveBtn').disabled = currentItems.length === 0;
+  } catch (err) {
+    showError('Error al procesar el ticket: ' + err.message + '. Podés cargar los productos manualmente.');
+    setUploadDone();
+  } finally {
+    showScanning(false);
+    this.value = '';
+  }
+});
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+function demoItems() {
+  return [
+    {name:'Leche La Serenísima 1L', price:1590},
+    {name:'Aceite Natura 900ml', price:2450},
+    {name:'Fideos Matarazzo 500g', price:890},
+    {name:'Arroz Maximo 1kg', price:1150},
+    {name:'Yerba Rosamonte 500g', price:1980},
+    {name:'Pan lactal Bimbo', price:1320},
+  ];
+}
+
+function showScanning(on) {
+  document.getElementById('scanOverlay').classList.toggle('show', on);
+  document.getElementById('uploadIcon').style.opacity = on ? '.3' : '1';
+  document.getElementById('uploadText').style.opacity = on ? '.3' : '1';
+  document.getElementById('uploadSub').style.opacity = on ? '.3' : '1';
+}
+
+function setUploadDone() {
+  document.getElementById('uploadIcon').textContent = '✅';
+  document.getElementById('uploadText').textContent = 'Ticket analizado';
+  document.getElementById('uploadSub').textContent = 'Revisá y editá antes de guardar';
+}
+
+function showError(msg) {
+  const el = document.getElementById('scanError');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+// ── Items ──
+function renderItems() {
+  const list = document.getElementById('itemsList');
+  document.getElementById('itemCount').textContent = currentItems.length + ' items';
+
+  if (currentItems.length === 0) {
+    list.innerHTML = '<div class="empty">Sin productos. Agregá manualmente.</div>';
+    document.getElementById('totalRow').style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = currentItems.map((item, i) => `
+    <div class="item-row">
+      <input class="item-name-input" value="${escHtml(item.name)}"
+        onchange="currentItems[${i}].name=this.value">
+      <input class="item-price-input" value="${formatPrice(item.price)}"
+        onchange="currentItems[${i}].price=parseFloat(this.value.replace(/[^0-9.]/g,''))||0; calcTotal()">
+      <button class="del-btn" onclick="removeItem(${i})">✕</button>
+    </div>
+  `).join('');
+
+  document.getElementById('totalRow').style.display = 'flex';
+  calcTotal();
+}
+
+function removeItem(i) {
+  currentItems.splice(i, 1);
+  renderItems();
+}
+
+function addItem() {
+  const name = document.getElementById('newName').value.trim();
+  const price = parseFloat(document.getElementById('newPrice').value) || 0;
+  if (!name) { toast('Escribí el nombre del producto'); return; }
+  currentItems.push({ name, price });
+  document.getElementById('newName').value = '';
+  document.getElementById('newPrice').value = '';
+  renderItems();
+  document.getElementById('saveBtn').disabled = false;
+}
+
+function calcTotal() {
+  const total = currentItems.reduce((s, i) => s + (parseFloat(i.price) || 0), 0);
+  document.getElementById('totalDisplay').textContent = '$' + Math.round(total).toLocaleString('es-AR');
+}
+
+// ── Guardar ticket ──
+async function saveTicket() {
+  const store = document.getElementById('storeSelect').value;
+  const date = document.getElementById('dateField').value;
+  if (!store || store === '__new__') { toast('Seleccioná un comercio'); return; }
+  if (currentItems.length === 0) { toast('Agregá al menos un producto'); return; }
+
+  const total = currentItems.reduce((s, i) => s + (parseFloat(i.price) || 0), 0);
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    if (SUPABASE_URL) {
+      // Insertar ticket
+      const [ticket] = await sbFetch('/rest/v1/tickets', {
+        method: 'POST',
+        body: JSON.stringify({ store_name: store, purchase_date: date || today(), total_amount: total })
+      });
+
+      // Insertar items
+      await sbFetch('/rest/v1/ticket_items', {
+        method: 'POST',
+        body: JSON.stringify(currentItems.map(item => ({
+          ticket_id: ticket.id,
+          name: item.name,
+          price: parseFloat(item.price) || 0
+        })))
+      });
+    } else {
+      // Modo demo: guardar en memoria local
+      localTickets.push({ store_name: store, purchase_date: date || today(), total_amount: total, items: [...currentItems] });
+    }
+
+    toast('Compra guardada ✓');
+    resetScanScreen();
+  } catch (err) {
+    toast('Error al guardar: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar compra';
+  }
+}
+
+function resetScanScreen() {
+  currentItems = [];
+  renderItems();
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('uploadIcon').textContent = '📄';
+  document.getElementById('uploadText').textContent = 'Tocá para fotografiar o subir';
+  document.getElementById('uploadSub').textContent = 'JPG o PNG — el ticket se transcribe automáticamente';
+  document.getElementById('storeSelect').value = '';
+  document.getElementById('dateField').value = today();
+  showError('');
+}
+
+// ── Historial ──
+let localTickets = [];
+
+async function loadHistory() {
+  let tickets = [];
+  try {
+    if (SUPABASE_URL) {
+      tickets = await sbFetch('/rest/v1/tickets?select=*&order=created_at.desc&limit=50');
+    } else {
+      tickets = [...localTickets].reverse();
+    }
+  } catch(e) { tickets = [...localTickets].reverse(); }
+
+  const now = new Date();
+  const monthTickets = tickets.filter(t => {
+    const d = new Date(t.purchase_date || t.created_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const monthTotal = monthTickets.reduce((s, t) => s + parseFloat(t.total_amount || 0), 0);
+
+  document.getElementById('monthTotal').textContent = '$' + Math.round(monthTotal).toLocaleString('es-AR');
+  document.getElementById('ticketCount').textContent = tickets.length;
+
+  const list = document.getElementById('historyList');
+  if (tickets.length === 0) {
+    list.innerHTML = '<div class="empty">Aún no hay compras guardadas.</div>';
+    return;
+  }
+
+  list.innerHTML = tickets.map(t => `
+    <div class="history-item">
+      <div>
+        <div class="h-store">${escHtml(t.store_name)}</div>
+        <div class="h-meta">${formatDate(t.purchase_date || t.created_at)}</div>
+      </div>
+      <div class="h-amount">$${Math.round(t.total_amount || 0).toLocaleString('es-AR')}</div>
+    </div>
+  `).join('');
+}
+
+// ── Comparar ──
+async function loadCompare() {
+  let items = [];
+  try {
+    if (SUPABASE_URL) {
+      items = await sbFetch('/rest/v1/price_comparison?select=*');
+    } else {
+      localTickets.forEach(t => {
+        (t.items || []).forEach(i => items.push({ product_name: i.name, store_name: t.store_name, price: i.price, purchase_date: t.purchase_date }));
+      });
+    }
+  } catch(e) {}
+  renderStoreCompare(items);
+  window._allItems = items;
+}
+
+function renderStoreCompare(items) {
+  const byStore = {};
+  items.forEach(i => {
+    if (!byStore[i.store_name]) byStore[i.store_name] = { total: 0, count: 0 };
+    byStore[i.store_name].total += parseFloat(i.price) || 0;
+    byStore[i.store_name].count += 1;
+  });
+
+  const sorted = Object.entries(byStore).sort((a,b) => a[1].total - b[1].total);
+  const el = document.getElementById('storeChart');
+  if (!sorted.length) { el.innerHTML = '<div class="empty">Guardá compras de distintos comercios para comparar.</div>'; return; }
+
+  const max = sorted[sorted.length-1][1].total;
+  el.innerHTML = sorted.map(([store, data], i) => {
+    const pct = max ? Math.round(data.total / max * 100) : 100;
+    const isBest = i === 0 && sorted.length > 1;
+    const isWorst = i === sorted.length-1 && sorted.length > 1;
+    return `
+      <div class="bar-wrap">
+        <div class="bar-header">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="bar-store">${escHtml(store)}</span>
+            ${isBest ? '<span class="badge badge-best">más económico</span>' : ''}
+            ${isWorst ? '<span class="badge badge-worst">más caro</span>' : ''}
+          </div>
+          <span class="bar-amount">$${Math.round(data.total).toLocaleString('es-AR')}</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill ${isWorst?'high':''}" style="width:${pct}%"></div></div>
+        <div class="bar-meta">${data.count} producto${data.count>1?'s':''} registrados</div>
+      </div>`;
+  }).join('');
+}
+
+function searchProduct() {
+  const q = document.getElementById('productSearch').value.trim().toLowerCase();
+  const items = window._allItems || [];
+  const card = document.getElementById('productResult');
+  const inner = document.getElementById('productResultInner');
+
+  if (q.length < 2) { card.style.display='none'; return; }
+
+  const found = {};
+  items.forEach(i => {
+    if (i.product_name.toLowerCase().includes(q)) {
+      if (!found[i.product_name]) found[i.product_name] = [];
+      found[i.product_name].push(i);
+    }
+  });
+
+  const products = Object.entries(found);
+  if (!products.length) {
+    inner.innerHTML = '<div class="empty">No se encontró ese producto.</div>';
+    card.style.display = 'block';
+    return;
+  }
+
+  inner.innerHTML = products.map(([name, prices]) => {
+    const sorted = [...prices].sort((a,b) => parseFloat(a.price)-parseFloat(b.price));
+    return `
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px">${escHtml(name)}</div>
+        ${sorted.map((p,i) => `
+          <div class="prod-row">
+            <span class="prod-store">${escHtml(p.store_name)}</span>
+            <span class="prod-price ${i===0&&sorted.length>1?'best':''}">
+              $${Math.round(p.price).toLocaleString('es-AR')}
+              <span class="badge ${i===0&&sorted.length>1?'badge-best':i===sorted.length-1&&sorted.length>1?'badge-worst':'badge-mid'}">
+                ${i===0&&sorted.length>1?'mejor':i===sorted.length-1&&sorted.length>1?'más caro':'similar'}
+              </span>
+            </span>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
+  card.style.display = 'block';
+}
+
+// ── Navigation ──
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'history') loadHistory();
+  if (name === 'compare') loadCompare();
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-stores').style.display = tab==='stores' ? 'block' : 'none';
+  document.getElementById('tab-product').style.display = tab==='product' ? 'block' : 'none';
+  if (tab === 'product') document.getElementById('productSearch').focus();
+}
+
+// ── Utils ──
+function toast(msg, duration=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDate(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function formatPrice(n) {
+  return '$' + (parseFloat(n)||0).toLocaleString('es-AR');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
