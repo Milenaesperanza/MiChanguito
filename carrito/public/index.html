@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>TuChangÜito</title>
+<title>TuChangüito</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -141,14 +141,14 @@
 <!-- PANTALLA DE NOMBRE -->
 <div id="loginWrap" class="login-wrap">
   <div class="login-box">
-    <div class="login-logo">TuChang<span>Ü</span>ito</div>
+    <div class="login-logo">TuChang<span>ü</span>ito</div>
     <div class="login-sub">Bienvenid@ — Registrate sólo con tu nombre</div>
     <label class="login-label">Soy</label>
     <input class="login-input" type="text" id="loginName" placeholder="Fulano, Sultano, Mengano..." autocomplete="name" autocapitalize="words">
     <div class="login-disc">Recordalo para acceder a tu historial de compras Ü</div>
     <button class="login-btn" onclick="entrar()">Entrar</button>
     <div style="margin-top:20px;text-align:center;font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:.03em">
-      2026 · TuChangÜito v0.1 · otro MVP de <a href="https://www.instagram.com/srtamilu" target="_blank" style="color:rgba(255,255,255,0.8);font-weight:700;text-decoration:none">SrtaMilu</a>
+      2026 · TuChangüito v0.1 · otro MVP de <a href="https://www.instagram.com/srtamilu" target="_blank" style="color:rgba(255,255,255,0.8);font-weight:700;text-decoration:none">SrtaMilu</a>
     </div>
   </div>
 </div>
@@ -157,7 +157,7 @@
 <div id="appWrap" style="display:none">
   <div class="header">
     <div class="header-inner">
-      <div class="logo">TuChang<span>Ü</span>ito</div>
+      <div class="logo">TuChang<span>ü</span>ito</div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="user-badge" id="userBadge"></span>
         <button style="font-size:11px;color:var(--faint);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="salir()">Salir</button>
@@ -394,13 +394,21 @@ async function loadStores() {
 function renderStoreSelect(targetId='storeSelect') {
   const sel = document.getElementById(targetId);
   const cur = sel.value;
-  sel.innerHTML = '<option value="">Seleccionar supermercado...</option>';
-  [...stores].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-    const o = document.createElement('option');
-    o.value = s.name;
-    o.textContent = s.isDefault ? s.name : '📍 ' + s.name;
-    sel.appendChild(o);
-  });
+  sel.innerHTML = '<option value="">Seleccionar comercio...</option>';
+
+  const mios = [...stores].filter(s => !s.isDefault).sort((a,b) => a.name.localeCompare(b.name));
+  const defaults = [...stores].filter(s => s.isDefault).sort((a,b) => a.name.localeCompare(b.name));
+
+  if (mios.length) {
+    const g1 = document.createElement('optgroup'); g1.label = 'Los que voy siempre';
+    mios.forEach(s => { const o = document.createElement('option'); o.value = s.name; o.textContent = s.name; g1.appendChild(o); });
+    sel.appendChild(g1);
+  }
+
+  const g2 = document.createElement('optgroup'); g2.label = 'Otros';
+  defaults.forEach(s => { const o = document.createElement('option'); o.value = s.name; o.textContent = s.name; g2.appendChild(o); });
+  sel.appendChild(g2);
+
   const sep = document.createElement('option'); sep.disabled = true; sep.textContent = '──────────'; sel.appendChild(sep);
   const add = document.createElement('option'); add.value = '__new__'; add.textContent = '+ Agregar comercio'; sel.appendChild(add);
   const del = document.createElement('option'); del.value = '__del__'; del.textContent = '✕ Gestionar comercios'; sel.appendChild(del);
@@ -426,17 +434,24 @@ function showStoreManager() {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px';
   const inner = document.createElement('div');
   inner.style.cssText = 'background:#fffaf4;border-radius:16px;padding:24px;width:100%;max-width:340px;max-height:70vh;overflow-y:auto';
+  const mios = [...stores].filter(s => !s.isDefault).sort((a,b) => a.name.localeCompare(b.name));
+  const defaults = [...stores].filter(s => s.isDefault).sort((a,b) => a.name.localeCompare(b.name));
+
+  const renderGroup = (lista, titulo) => lista.length ? `
+    <div style="font-size:10px;font-weight:700;color:#9a7a5a;letter-spacing:.06em;text-transform:uppercase;margin:12px 0 6px">${titulo}</div>
+    ${lista.map(s => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e8d8c4">
+        <span style="font-size:14px;color:#3a2010">${s.name}</span>
+        <button onclick="deleteStore('${s.name}')" style="background:none;border:1px solid #fcc;border-radius:6px;padding:3px 10px;font-size:12px;color:#C8372D;cursor:pointer">✕</button>
+      </div>`).join('')}` : '';
+
   inner.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <span style="font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;color:#3a2010">Gestionar comercios</span>
       <button onclick="document.getElementById('storeManagerModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9a7a5a">✕</button>
     </div>
-    <div style="font-size:11px;color:#9a7a5a;margin-bottom:12px">Tocá ✕ para borrar. Los 📍 son tuyos.</div>
-    ${[...stores].sort((a,b)=>a.name.localeCompare(b.name)).map(s => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e8d8c4">
-        <span style="font-size:14px;color:#3a2010">${s.isDefault ? s.name : '📍 ' + s.name}</span>
-        <button onclick="deleteStore('${s.name}')" style="background:none;border:1px solid #fcc;border-radius:6px;padding:3px 10px;font-size:12px;color:#C8372D;cursor:pointer">✕</button>
-      </div>`).join('')}
+    ${renderGroup(mios, 'Los que voy siempre')}
+    ${renderGroup(defaults, 'Otros')}
   `;
   modal.appendChild(inner);
   modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
@@ -677,7 +692,7 @@ async function editTicket(id) {
 
   // Rellenar store select
   const sel = document.getElementById('editStoreSelect');
-  sel.innerHTML = '<option value="">Seleccionar supermercado/comercio...</option>';
+  sel.innerHTML = '<option value="">Seleccionar comercio...</option>';
   stores.forEach(s => {
     const o = document.createElement('option');
     o.value = s.name; o.textContent = s.name;
