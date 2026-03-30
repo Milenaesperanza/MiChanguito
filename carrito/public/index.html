@@ -159,6 +159,8 @@
       <button class="login-btn" onclick="entrar()" style="margin-top:14px">Entrar</button>
     </div>
 
+    <div style="margin-top:12px;margin-bottom:16px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer" onclick="document.getElementById('installHint').style.display='block';this.style.display='none'" id="installLink">¿Cómo instalar la app? →</div>
+
     <div id="installHint" style="margin-bottom:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.9;display:none">
       Para instalar en tu celu:<br>
       <strong style="color:rgba(255,255,255,0.75)">iPhone</strong> → tocá
@@ -167,7 +169,7 @@
       <strong style="color:rgba(255,255,255,0.75)">Android</strong> → tocá ⋮ → "Añadir a pantalla principal"
     </div>
 
-    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:.03em">
+    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:.03em;margin-top:32px">
       2026 · TuChangüito v0.1 · otro MVP de <a href="https://www.instagram.com/srtamilu" target="_blank" style="color:rgba(255,255,255,0.7);font-weight:700;text-decoration:none">SrtaMilu</a>
     </div>
   </div>
@@ -385,13 +387,7 @@ function precioPorUnidad(precio, cantidad) {
   return { valor: Math.round(ppu), label };
 }
 
-// Mostrar instrucción de instalación solo si no está en modo standalone
-if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
-  document.addEventListener('DOMContentLoaded', () => {
-    const hint = document.getElementById('installHint');
-    if (hint) hint.style.display = 'block';
-  });
-}
+// No mostrar instrucciones automáticamente
 
 const SUPABASE_URL = 'https://twfpcczenmpxrxtvrgqj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3ZnBjY3plbm1weHJ4dHZyZ3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3OTczODMsImV4cCI6MjA5MDM3MzM4M30.WQnULJCMRo6PEjX9dSDd8yEz2Qzs5ijl-k956nlBdPw';
